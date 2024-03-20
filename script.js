@@ -21,7 +21,7 @@ message.classList.add('messageStyle');
 
 document.addEventListener('keydown', (e) => {
     
-    if(e.key == 'Enter' && game_state != 'Play'){
+    if(e.key == ' ' && game_state != 'Play'){
         sound_latar.play();
 
         document.querySelectorAll('.pipe_sprite').forEach((e) => {
@@ -52,7 +52,7 @@ function play(){
             }else{
                 if(bird_props.left < pipe_sprite_props.left + pipe_sprite_props.width && bird_props.left + bird_props.width > pipe_sprite_props.left && bird_props.top < pipe_sprite_props.top + pipe_sprite_props.height && bird_props.top + bird_props.height > pipe_sprite_props.top){
                     game_state = 'End';
-                    message.innerHTML = 'Game Over'.fontcolor('red') + '<br>Press Enter To Restart';
+                    message.innerHTML = 'Yah POKE kalahan'.fontcolor('red') + '<br>Pencet spasi lagi ya bro!';
                     message.classList.add('messageStyle');
                     img.style.display = 'none';
                     sound_die.play();
@@ -75,14 +75,14 @@ function play(){
         if(game_state != 'Play') return;
         bird_dy = bird_dy + grativy;
         document.addEventListener('keydown', (e) => {
-            if(e.key == 'ArrowUp' || e.key == ' '){
+            if(e.key == ' ' || e.key == ' '){
                 img.src = 'images/Bird-2.png';
                 bird_dy = -7.6;
             }
         });
 
         document.addEventListener('keyup', (e) => {
-            if(e.key == 'ArrowUp' || e.key == ' '){
+            if(e.key == ' ' || e.key == ' '){
                 img.src = 'images/Bird.png';
             }
         });
