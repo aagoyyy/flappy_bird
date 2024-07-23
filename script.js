@@ -1,65 +1,88 @@
-let move_speed = 3, grativy = 0.5;
+let move_speed = 3, gravity = 0.5;
 let bird = document.querySelector('.bird');
 let img = document.getElementById('bird-1');
 let sound_point = new Audio('sounds effect/point.mp3');
 let sound_die = new Audio('sounds effect/die.mp3');
 let sound_latar = new Audio('sounds effect/background_music.mp3');
+sound_latar.loop = true; // Loop background music
 
-// getting bird element properties
 let bird_props = bird.getBoundingClientRect();
-
-// This method returns DOMReact -> top, right, bottom, left, x, y, width and height
 let background = document.querySelector('.background').getBoundingClientRect();
-
 let score_val = document.querySelector('.score_val');
 let message = document.querySelector('.message');
 let score_title = document.querySelector('.score_title');
+let high_score_val = document.querySelector('.high-score_val');
 
 let game_state = 'Start';
 img.style.display = 'none';
 message.classList.add('messageStyle');
 
-document.addEventListener('keydown', (e) => {
-    
-    if(e.key == ' ' && game_state != 'Play'){
-        sound_latar.play();
+// Load high score from local storage
+let high_score = localStorage.getItem('highScore') || 0;
+high_score_val.innerHTML = high_score;
 
-        document.querySelectorAll('.pipe_sprite').forEach((e) => {
-            e.remove();
-        });
-        img.style.display = 'block';
-        bird.style.top = '40vh';
-        game_state = 'Play';
-        message.innerHTML = '';
-        score_title.innerHTML = 'Score : ';
-        score_val.innerHTML = '0';
-        message.classList.remove('messageStyle');
-        play();
+function startGame() {
+    sound_latar.play();
+
+    document.querySelectorAll('.pipe_sprite').forEach((e) => {
+        e.remove();
+    });
+    img.style.display = 'block';
+    bird.style.top = '40vh';
+    game_state = 'Play';
+    message.innerHTML = '';
+    score_title.innerHTML = 'Score : ';
+    score_val.innerHTML = '0';
+    message.classList.remove('messageStyle');
+    play();
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' && game_state !== 'Play') {
+        startGame();
     }
 });
 
-function play(){
-    function move(){
-        if(game_state != 'Play') return;
+document.addEventListener('click', () => {
+    if (game_state !== 'Play') {
+        startGame();
+    }
+});
+
+function play() {
+    function move() {
+        if (game_state !== 'Play') return;
 
         let pipe_sprite = document.querySelectorAll('.pipe_sprite');
         pipe_sprite.forEach((element) => {
             let pipe_sprite_props = element.getBoundingClientRect();
             bird_props = bird.getBoundingClientRect();
 
-            if(pipe_sprite_props.right <= 0){
+            if (pipe_sprite_props.right <= 0) {
                 element.remove();
-            }else{
-                if(bird_props.left < pipe_sprite_props.left + pipe_sprite_props.width && bird_props.left + bird_props.width > pipe_sprite_props.left && bird_props.top < pipe_sprite_props.top + pipe_sprite_props.height && bird_props.top + bird_props.height > pipe_sprite_props.top){
+            } else {
+                if (
+                    bird_props.left < pipe_sprite_props.left + pipe_sprite_props.width &&
+                    bird_props.left + bird_props.width > pipe_sprite_props.left &&
+                    bird_props.top < pipe_sprite_props.top + pipe_sprite_props.height &&
+                    bird_props.top + bird_props.height > pipe_sprite_props.top
+                ) {
                     game_state = 'End';
-                    message.innerHTML = 'Yah POKE kalahan'.fontcolor('red') + '<br>Pencet spasi lagi ya bro!';
+                    message.innerHTML = 'Yah POKE kalahan'.fontcolor('red') + '<br>Pencet spasi lagi atau klik untuk mulai!';
                     message.classList.add('messageStyle');
                     img.style.display = 'none';
                     sound_die.play();
+                    sound_latar.pause();
+                    // Save high score
+                    if (parseInt(score_val.innerHTML) > high_score) {
+                        high_score = score_val.innerHTML;
+                        localStorage.setItem('highScore', high_score);
+                        high_score_val.innerHTML = high_score;
+                    }
                     return;
-                }else{
-                    if(pipe_sprite_props.right < bird_props.left && pipe_sprite_props.right + move_speed >= bird_props.left && element.increase_score == '1'){
-                        score_val.innerHTML =+ score_val.innerHTML + 1;
+                } else {
+                    if (pipe_sprite_props.right < bird_props.left && pipe_sprite_props.right + move_speed >= bird_props.left && element.increase_score === '1') {
+                        score_val.innerHTML = +score_val.innerHTML + 1;
                         sound_point.play();
                     }
                     element.style.left = pipe_sprite_props.left - move_speed + 'px';
@@ -71,44 +94,57 @@ function play(){
     requestAnimationFrame(move);
 
     let bird_dy = 0;
-    function apply_gravity(){
-        if(game_state != 'Play') return;
-        bird_dy = bird_dy + grativy;
-        document.addEventListener('keydown', (e) => {
-            if(e.key == ' ' || e.key == ' '){
-                img.src = 'images/Bird-2.png';
-                bird_dy = -7.6;
-            }
-        });
+    function apply_gravity() {
+        if (game_state !== 'Play') return;
+        bird_dy += gravity;
+        bird.style.top = bird_props.top + bird_dy + 'px';
+        bird_props = bird.getBoundingClientRect();
 
-        document.addEventListener('keyup', (e) => {
-            if(e.key == ' ' || e.key == ' '){
-                img.src = 'images/Bird.png';
-            }
-        });
-
-        if(bird_props.top <= 0 || bird_props.bottom >= background.bottom){
+        if (bird_props.top <= 0 || bird_props.bottom >= background.bottom) {
             game_state = 'End';
             message.style.left = '28vw';
             window.location.reload();
             message.classList.remove('messageStyle');
             return;
         }
-        bird.style.top = bird_props.top + bird_dy + 'px';
-        bird_props = bird.getBoundingClientRect();
         requestAnimationFrame(apply_gravity);
     }
     requestAnimationFrame(apply_gravity);
 
-    let pipe_seperation = 0;
+    document.addEventListener('keydown', (e) => {
+        if (e.key === ' ' && game_state === 'Play') {
+            img.src = 'images/Bird-2.png';
+            bird_dy = -7.6;
+        }
+    });
 
+    document.addEventListener('keyup', (e) => {
+        if (e.key === ' ' && game_state === 'Play') {
+            img.src = 'images/Bird.png';
+        }
+    });
+
+    document.addEventListener('mousedown', () => {
+        if (game_state === 'Play') {
+            img.src = 'images/Bird-2.png';
+            bird_dy = -7.6;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (game_state === 'Play') {
+            img.src = 'images/Bird.png';
+        }
+    });
+
+    let pipe_separation = 0;
     let pipe_gap = 35;
 
-    function create_pipe(){
-        if(game_state != 'Play') return;
+    function create_pipe() {
+        if (game_state !== 'Play') return;
 
-        if(pipe_seperation > 115){
-            pipe_seperation = 0;
+        if (pipe_separation > 115) {
+            pipe_separation = 0;
 
             let pipe_posi = Math.floor(Math.random() * 43) + 8;
             let pipe_sprite_inv = document.createElement('div');
@@ -125,8 +161,37 @@ function play(){
 
             document.body.appendChild(pipe_sprite);
         }
-        pipe_seperation++;
+        pipe_separation++;
         requestAnimationFrame(create_pipe);
     }
     requestAnimationFrame(create_pipe);
+
+    // Event listener untuk tombol spasi
+document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' && game_state === 'Play') {
+        img.src = 'images/Bird-2.png';
+        bird_dy = -7.6;
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === ' ' && game_state === 'Play') {
+        img.src = 'images/Bird.png';
+    }
+});
+
+// Event listener untuk sentuhan layar di perangkat seluler
+document.addEventListener('touchstart', () => {
+    if (game_state === 'Play') {
+        img.src = 'images/Bird-2.png';
+        bird_dy = -7.6;
+    }
+});
+
+document.addEventListener('touchend', () => {
+    if (game_state === 'Play') {
+        img.src = 'images/Bird.png';
+    }
+});
+
 }
